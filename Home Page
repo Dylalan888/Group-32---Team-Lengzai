@@ -1,3 +1,161 @@
 //Home Page
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RapidKL AI Core</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar ai-panel">
+            <div class="brand">
+                <div class="pulse-dot"></div>
+                <h2>SYS_RKL_<span>AI</span></h2>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="active"><span class="icon">⊞</span> OVERVIEW</a>
+                <a href="#"><span class="icon">∿</span> PREDICTIONS</a>
+                <a href="#"><span class="icon">◎</span> ROUTES_MAP</a>
+                <a href="#"><span class="icon">◬</span> ANOMALIES</a>
+                <a href="#"><span class="icon">⚙</span> CONFIG</a>
+            </nav>
+            <div class="system-status">
+                <p>SYS.CORE : <span class="neon-cyan">ONLINE</span></p>
+                <p>NEURAL.NET : <span class="neon-cyan">SYNCED</span></p>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard -->
+        <main class="main-grid">
+            <!-- Header Row -->
+            <header class="header-row ai-panel">
+                <div class="hud-title">
+                    <h1>PREDICTIVE_OPERATIONS_CENTER</h1>
+                    <span class="hud-subtitle">LIVE PREDICTION & ANOMALY DETECTION ENGINE</span>
+                </div>
+                <div class="hud-metrics">
+                    <div class="metric-small">
+                        <label>AI CONFIDENCE</label>
+                        <span class="neon-green">98.4%</span>
+                    </div>
+                    <div class="metric-small">
+                        <label>LATENCY</label>
+                        <span class="neon-cyan">14ms</span>
+                    </div>
+                    <div class="user-chip">
+                        ADMIN_OVR
+                    </div>
+                </div>
+            </header>
+
+            <!-- KPI Row -->
+            <section class="kpi-row">
+                <div class="kpi-box ai-panel">
+                    <div class="kpi-label">ACTIVE_NODES (BUSES)</div>
+                    <div class="kpi-value cyan">342</div>
+                    <div class="kpi-trend">▲ +12% CAPACITY</div>
+                </div>
+                <div class="kpi-box ai-panel">
+                    <div class="kpi-label">SYS_AVG_DELAY (PEAK)</div>
+                    <div class="kpi-value red">18<span class="unit">MIN</span></div>
+                    <div class="kpi-trend danger">▼ ANOMALY DETECTED</div>
+                </div>
+                <div class="kpi-box ai-panel">
+                    <div class="kpi-label">PREDICTED_LOSS_SAVED</div>
+                    <div class="kpi-value green"><span class="unit">RM</span> 12.4K</div>
+                    <div class="kpi-trend">▲ COST OPTIMIZED</div>
+                </div>
+                <div class="kpi-box ai-panel">
+                    <div class="kpi-label">CRITICAL_ROUTES</div>
+                    <div class="kpi-value warning">07</div>
+                    <div class="kpi-trend danger">⚠️ ACTION REQ</div>
+                </div>
+            </section>
+
+            <!-- Middle Row: Chart & Insights -->
+            <section class="middle-row">
+                <!-- AI Graph -->
+                <div class="graph-container ai-panel">
+                    <div class="panel-header">
+                        <h3>NEURAL_DELAY_PROJECTION (WEEKLY)</h3>
+                        <div class="panel-tools">
+                            <span class="tool-btn active">W</span>
+                            <span class="tool-btn">M</span>
+                            <span class="tool-btn">Y</span>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="aiChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI Insights / Terminal -->
+                <div class="insights-container ai-panel">
+                    <div class="panel-header">
+                        <h3>AI_PREDICTIVE_ALERTS</h3>
+                    </div>
+                    <div class="terminal-list">
+                        <div class="terminal-item critical">
+                            <div class="t-header"><span class="t-icon">🚨</span> <span>THU_PEAK_ANOMALY | ROUTE 300</span></div>
+                            <div class="t-body">
+                                <strong>Probability: 94% | Impact: 2 HR DELAY</strong><br>
+                                Pattern detected: Heavy congestion overlapping with localized events. 
+                                <span class="t-action">> SUGGEST: ALLOCATE 2 BACKUP UNITS [EXECUTE_Y/N]</span>
+                            </div>
+                        </div>
+                        <div class="terminal-item warning">
+                            <div class="t-header"><span class="t-icon">⚠️</span> <span>HARDWARE_DEGRADATION | BUS VBH 1234</span></div>
+                            <div class="t-body">
+                                <strong>Probability: 88% | Impact: RM5K REPAIR</strong><br>
+                                Anomalous fuel burn rate curve. Engine failure imminent (72hr).
+                                <span class="t-action">> SUGGEST: RE-ROUTE TO DEPOT [EXECUTE_Y/N]</span>
+                            </div>
+                        </div>
+                        <div class="terminal-item success">
+                            <div class="t-header"><span class="t-icon">💡</span> <span>CAPACITY_OPTIMIZATION | ROUTE 400</span></div>
+                            <div class="t-body">
+                                <strong>Probability: 99% | Impact: +EFFICIENCY</strong><br>
+                                Demand dropped 30%. Excess capacity available.
+                                <span class="t-action">> SUGGEST: TRANSFER 1 UNIT TO R300 [EXECUTE_Y/N]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Row: Data Grid -->
+            <section class="bottom-row ai-panel">
+                <div class="panel-header">
+                    <h3>LIVE_TRACKING_MATRIX</h3>
+                    <div class="scanner-line"></div>
+                </div>
+                <div class="data-table-container">
+                    <table class="ai-table">
+                        <thead>
+                            <tr>
+                                <th>IDENTIFIER</th>
+                                <th>ASSET_ID</th>
+                                <th>SCHED_T</th>
+                                <th>AI_PREDICT_T</th>
+                                <th>DELTA_VARIANCE</th>
+                                <th>SYS_STATE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrix-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
 
