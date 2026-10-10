@@ -1,4 +1,4 @@
-Group 32
-Team Lengzai
-BasGuard AI App
-Track 1: Predictive Model Track - Predict Early, Decide Better
+Group 32  <br>
+Team Lengzai  <br>
+BasGuard AI App  <br>
+Track 1: Predictive Model Track - Predict Early, Decide Better  <br>
