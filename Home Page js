@@ -1,0 +1,107 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Cyberpunk Chart setup
+    const ctx = document.getElementById('aiChart').getContext('2d');
+    
+    const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientFill.addColorStop(0, 'rgba(255, 42, 42, 0.6)');
+    gradientFill.addColorStop(1, 'rgba(255, 42, 42, 0.0)');
+    
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+            datasets: [{
+                label: 'BASELINE_DELAY (MIN)',
+                data: [15, 20, 18, 45, 50, 10, 5],
+                borderColor: 'rgba(107, 138, 156, 0.5)',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0
+            },
+            {
+                label: 'AI_PREDICTED_SPIKE (MIN)',
+                data: [18, 22, 25, 120, 65, 15, 8],
+                borderColor: '#ff2a2a',
+                backgroundColor: gradientFill,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#ff2a2a',
+                pointBorderColor: '#000',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { 
+                        color: '#6b8a9c',
+                        font: { family: "'Rajdhani', sans-serif" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleFont: { family: "'Rajdhani', sans-serif" },
+                    bodyFont: { family: "'Rajdhani', sans-serif" },
+                    borderColor: '#00f3ff',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(0, 243, 255, 0.05)' },
+                    ticks: { color: '#00f3ff', font: { family: "'Rajdhani', sans-serif" } }
+                },
+                x: {
+                    grid: { color: 'rgba(0, 243, 255, 0.05)' },
+                    ticks: { color: '#00f3ff', font: { family: "'Rajdhani', sans-serif" } }
+                }
+            }
+        }
+    });
+
+    // Populate Matrix Table
+    const liveData = [
+        { id: 'R300_PANDAN', asset: 'VBH_9021', sched: '17:30', ai_pred: '19:30', delta: '+120M', state: 'alert' },
+        { id: 'R250_WANGSA', asset: 'WYY_1234', sched: '17:45', ai_pred: '17:50', delta: '+05M', state: 'warn' },
+        { id: 'R400_DAMAI', asset: 'VCC_5566', sched: '18:00', ai_pred: '18:00', delta: '+00M', state: 'nominal' },
+        { id: 'R450_KAJANG', asset: 'BXX_7890', sched: '18:15', ai_pred: '18:45', delta: '+30M', state: 'warn' },
+        { id: 'R600_PUCHONG', asset: 'WA_8888', sched: '18:30', ai_pred: '18:32', delta: '+02M', state: 'nominal' },
+        { id: 'R300_PANDAN', asset: 'VBH_4455', sched: '18:45', ai_pred: '20:15', delta: '+90M', state: 'alert' },
+    ];
+
+    const tbody = document.getElementById('matrix-body');
+    
+    liveData.forEach(row => {
+        let stateHtml = '';
+        let deltaHtml = '';
+        
+        if (row.state === 'alert') {
+            stateHtml = `<span class="sys-state alert">CRITICAL</span>`;
+            deltaHtml = `<span style="color: #ff2a2a">${row.delta}</span>`;
+        } else if (row.state === 'warn') {
+            stateHtml = `<span class="sys-state warn">WARNING</span>`;
+            deltaHtml = `<span style="color: #ffb700">${row.delta}</span>`;
+        } else {
+            stateHtml = `<span class="sys-state nominal">NOMINAL</span>`;
+            deltaHtml = `<span style="color: #00ff66">${row.delta}</span>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color: #e0fbfc">${row.id}</td>
+            <td style="color: #6b8a9c">${row.asset}</td>
+            <td>${row.sched}</td>
+            <td style="color: ${row.state === 'alert' ? '#ff2a2a' : '#00f3ff'}">${row.ai_pred}</td>
+            <td>${deltaHtml}</td>
+            <td>${stateHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+});
