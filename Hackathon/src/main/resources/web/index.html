@@ -174,10 +174,78 @@
         <!-- Tab 2: Live Route Map -->
         <section id="tab-map" class="tab-content">
             <div class="glass map-card">
-                <div class="section-header">
-                    <h2><i class="fa-solid fa-map-location-dot"></i> Rapid KL Klang Valley Bus Route & Delay Map</h2>
-                    <p class="section-sub">Live simulated bus positions and delay severity heat indicators across Kuala Lumpur</p>
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2><i class="fa-solid fa-map-location-dot icon-purple"></i> Rapid KL Klang Valley Bus Route & Operational Map</h2>
+                        <p class="section-sub">Live simulated bus telemetry, real station transit hubs, and route delay indicators across Kuala Lumpur</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div class="kpi-box" style="padding: 0.4rem 0.8rem; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.78rem;">
+                            <span style="color: var(--text-muted);">Active Buses:</span> <strong style="color: #fff;" id="map-kpi-buses">12 Monitored</strong>
+                        </div>
+                        <div class="kpi-box" style="padding: 0.4rem 0.8rem; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.78rem;">
+                            <span style="color: var(--text-muted);">Disrupted Corridors:</span> <strong style="color: var(--danger);" id="map-kpi-critical">6 High/Critical</strong>
+                        </div>
+                        <div class="kpi-box" style="padding: 0.4rem 0.8rem; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.78rem;">
+                            <span style="color: var(--text-muted);">Avg Delay:</span> <strong style="color: var(--warning);" id="map-kpi-avgdelay">+23.1 min</strong>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Interactive Map Control Toolbar -->
+                <div class="map-toolbar glass" style="margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; background: rgba(15, 23, 42, 0.6);">
+                    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; flex: 1;">
+                        <div style="position: relative; min-width: 220px; flex: 1; max-width: 320px;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 0.75rem; top: 0.65rem; color: var(--text-muted); font-size: 0.85rem;"></i>
+                            <input type="text" id="map-search-input" placeholder="Search Bus ID (MYB-7701) or Station..." style="width: 100%; background: rgba(30, 41, 59, 0.8); border: 1px solid var(--border-color); color: #fff; padding: 0.45rem 0.75rem 0.45rem 2.2rem; border-radius: 8px; font-size: 0.82rem; outline: none;" />
+                        </div>
+                        <select id="map-filter-risk" class="select-input" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 140px;">
+                            <option value="ALL">All Risk Levels</option>
+                            <option value="CRITICAL">Critical Risk Only</option>
+                            <option value="HIGH">High + Critical Risk</option>
+                            <option value="MEDIUM">Medium Risk</option>
+                            <option value="LOW">Low Risk</option>
+                        </select>
+                        <select id="map-filter-route" class="select-input" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; min-width: 150px;">
+                            <option value="ALL">All Bus Routes</option>
+                            <option value="770">Route 770 (Mid Valley - Subang)</option>
+                            <option value="300">Route 300 (Pandan - Ampang)</option>
+                            <option value="600">Route 600 (Puchong - Pasar Seni)</option>
+                            <option value="450">Route 450 (Kajang - Lebuh Pudu)</option>
+                            <option value="590">Route 590 (Sg Long - Pudu)</option>
+                            <option value="772">Route 772 (Subang Suria - PS)</option>
+                            <option value="B115">Route B115 (KL Sentral - Keramat)</option>
+                            <option value="250">Route 250 (Wangsa Maju - Ampang)</option>
+                            <option value="750">Route 750 (Pasar Seni - Shah Alam)</option>
+                            <option value="780">Route 780 (Pasar Seni - Kota Damansara)</option>
+                            <option value="100">Route 100 (Pudu - K. Selangor)</option>
+                            <option value="T801">Route T801 (Wangsa Maju Loop)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.35rem;">
+                            <label for="map-select-layer" style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-layer-group"></i> Style:</label>
+                            <select id="map-select-layer" class="select-input" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; min-width: 135px;">
+                                <option value="esriDark" selected>Dark GIS (No Key)</option>
+                                <option value="esriStreet">Street Map (No Key)</option>
+                                <option value="osm">OpenStreetMap (No Key)</option>
+                            </select>
+                        </div>
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; font-size: 0.72rem; padding: 0.4rem 0.6rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <i class="fa-solid fa-circle-check"></i> Free GIS • No API Key Needed
+                        </span>
+                        <button id="map-toggle-routes" class="btn btn-secondary btn-sm active" style="font-size: 0.78rem;">
+                            <i class="fa-solid fa-route icon-purple"></i> Routes
+                        </button>
+                        <button id="map-toggle-stations" class="btn btn-secondary btn-sm active" style="font-size: 0.78rem;">
+                            <i class="fa-solid fa-building-user icon-amber"></i> Stations
+                        </button>
+                        <button id="map-reset-view" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
+                            <i class="fa-solid fa-crosshairs"></i> Reset View
+                        </button>
+                    </div>
+                </div>
+
                 <div id="bus-map" class="map-container"></div>
             </div>
         </section>

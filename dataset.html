@@ -122,6 +122,21 @@
             });
         });
 
+        const FALLBACK_DATASET_RECORDS = [
+            { tripId: "TRIP-101", busId: "MYB-7701", routeId: "770", predictedDelayMinutes: 58.8, passengerLoad: 88, weatherCondition: "HEAVY_RAIN", trafficCongestionLevel: "CRITICAL", standbyBusAvailable: true, driverShiftHours: 6.5, latitude: 3.1176, longitude: 101.6775, delayCause: "Federal Highway Bottleneck & Heavy Rain", riskLevel: "CRITICAL" },
+            { tripId: "TRIP-104", busId: "MYB-3004", routeId: "300", predictedDelayMinutes: 42.5, passengerLoad: 92, weatherCondition: "HEAVY_RAIN", trafficCongestionLevel: "CRITICAL", standbyBusAvailable: false, driverShiftHours: 7.2, latitude: 3.1490, longitude: 101.7120, delayCause: "Ampang Corridor Construction Gridlock", riskLevel: "CRITICAL" },
+            { tripId: "TRIP-106", busId: "MYB-6006", routeId: "600", predictedDelayMinutes: 38.2, passengerLoad: 84, weatherCondition: "MODERATE_RAIN", trafficCongestionLevel: "HIGH", standbyBusAvailable: true, driverShiftHours: 5.8, latitude: 3.0330, longitude: 101.6210, delayCause: "LDP Interchange Vehicle Breakdown", riskLevel: "HIGH" },
+            { tripId: "TRIP-108", busId: "MYB-4508", routeId: "450", predictedDelayMinutes: 34.0, passengerLoad: 78, weatherCondition: "CLEAR", trafficCongestionLevel: "HIGH", standbyBusAvailable: true, driverShiftHours: 4.5, latitude: 2.9820, longitude: 101.7850, delayCause: "Cheras Highway Heavy Congestion", riskLevel: "HIGH" },
+            { tripId: "TRIP-110", busId: "MYB-5900", routeId: "590", predictedDelayMinutes: 28.5, passengerLoad: 75, weatherCondition: "CLEAR", trafficCongestionLevel: "HIGH", standbyBusAvailable: true, driverShiftHours: 5.0, latitude: 3.0450, longitude: 101.7920, delayCause: "Sungai Besi Toll Bottleneck", riskLevel: "HIGH" },
+            { tripId: "TRIP-112", busId: "MYB-7722", routeId: "772", predictedDelayMinutes: 26.0, passengerLoad: 80, weatherCondition: "MODERATE_RAIN", trafficCongestionLevel: "HIGH", standbyBusAvailable: true, driverShiftHours: 6.0, latitude: 3.1480, longitude: 101.5450, delayCause: "Federal Highway Subang Ramp Blockage", riskLevel: "HIGH" },
+            { tripId: "TRIP-102", busId: "MYB-1152", routeId: "B115", predictedDelayMinutes: 18.4, passengerLoad: 65, weatherCondition: "CLEAR", trafficCongestionLevel: "MEDIUM", standbyBusAvailable: true, driverShiftHours: 3.5, latitude: 3.1340, longitude: 101.6865, delayCause: "Jalan Tun Sambanthan Bus Lane Bottleneck", riskLevel: "MEDIUM" },
+            { tripId: "TRIP-107", busId: "MYB-2507", routeId: "250", predictedDelayMinutes: 14.2, passengerLoad: 70, weatherCondition: "CLEAR", trafficCongestionLevel: "MEDIUM", standbyBusAvailable: true, driverShiftHours: 4.0, latitude: 3.2050, longitude: 101.7320, delayCause: "Jalan Pahang Bus Stop Crowding", riskLevel: "MEDIUM" },
+            { tripId: "TRIP-103", busId: "MYB-7503", routeId: "750", predictedDelayMinutes: 8.5, passengerLoad: 50, weatherCondition: "CLEAR", trafficCongestionLevel: "LOW", standbyBusAvailable: true, driverShiftHours: 2.5, latitude: 3.1420, longitude: 101.6940, delayCause: "Minor Traffic Signal Delay", riskLevel: "LOW" },
+            { tripId: "TRIP-105", busId: "MYB-7805", routeId: "780", predictedDelayMinutes: 4.0, passengerLoad: 45, weatherCondition: "CLEAR", trafficCongestionLevel: "LOW", standbyBusAvailable: true, driverShiftHours: 3.0, latitude: 3.1510, longitude: 101.5920, delayCause: "Normal Operating Conditions", riskLevel: "LOW" },
+            { tripId: "TRIP-109", busId: "MYB-1009", routeId: "100", predictedDelayMinutes: 3.0, passengerLoad: 40, weatherCondition: "CLEAR", trafficCongestionLevel: "LOW", standbyBusAvailable: true, driverShiftHours: 2.0, latitude: 3.3500, longitude: 101.2500, delayCause: "On Time Schedule", riskLevel: "LOW" },
+            { tripId: "TRIP-111", busId: "MYB-8011", routeId: "T801", predictedDelayMinutes: 2.0, passengerLoad: 35, weatherCondition: "CLEAR", trafficCongestionLevel: "LOW", standbyBusAvailable: true, driverShiftHours: 1.5, latitude: 3.2050, longitude: 101.7320, delayCause: "Feeder Bus Dynamic Flow", riskLevel: "LOW" }
+        ];
+
         let allRecords = [];
 
         async function loadDatasetView() {
@@ -132,6 +147,7 @@
             try {
                 const endpoint = selector === '10k' ? '/api/predictions' : '/api/trips';
                 const res = await fetch(endpoint);
+                if (!res.ok) throw new Error('API server unavailable');
                 const trips = await res.json();
                 
                 // Fetch full details
@@ -141,8 +157,10 @@
                 document.getElementById('dataset-count-label').textContent = `Loaded ${allRecords.length} records in inspector`;
                 renderRows(allRecords);
             } catch (e) {
-                console.error(e);
-                tbody.innerHTML = '<tr><td colspan="12" class="loading-cell text-danger">Error loading dataset records.</td></tr>';
+                console.warn('Using static dataset fallback for offline/Vercel deployment:', e);
+                allRecords = FALLBACK_DATASET_RECORDS;
+                document.getElementById('dataset-count-label').textContent = `Loaded ${allRecords.length} records (Offline Dataset Mode)`;
+                renderRows(allRecords);
             }
         }
 

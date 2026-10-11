@@ -30,6 +30,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Compilation SUCCESSFUL!" -ForegroundColor Green
+
+# Copy resources to bin
+if (Test-Path src/main/resources/web) {
+    Write-Host "Copying web resources to bin/web..." -ForegroundColor Yellow
+    Copy-Item -Recurse -Force src/main/resources/web bin/web
+}
 Write-Host "Running Test Suite..." -ForegroundColor Cyan
 
 & java -cp bin com.busguard.TestRunner
