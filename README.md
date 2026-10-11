@@ -86,3 +86,13 @@ The ML pipeline was evaluated against the Rapid KL bus dataset:
 - **Recall**: 0.89
 - **F1 Score**: 0.90
 - **Unit & Integration Test Suite**: 23 / 23 Tests PASSED (0 Failures)
+
+<br>
+<br>
+## Presentation
+
+<p align="center">
+  <a href="https://canva.link/s9xqwmhnjztw3i5">
+    <img src="https://img.shields.io/badge/View-Canva%20Presentation-purple?style=for-the-badge&logo=canva" alt="View Canva Presentation">
+  </a>
+</p>
