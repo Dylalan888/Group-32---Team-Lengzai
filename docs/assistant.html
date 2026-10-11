@@ -51,10 +51,10 @@
                 </p>
             </div>
             <div style="display: flex; gap: 0.75rem;">
-                <a href="#" onclick="downloadDataset('real'); return false;" class="btn btn-secondary btn-sm">
+                <a href="/api/download-dataset?type=real" target="_blank" class="btn btn-secondary btn-sm">
                     <i class="fa-solid fa-download"></i> Live CSV Dataset
                 </a>
-                <a href="#" onclick="downloadDataset('10k'); return false;" class="btn btn-secondary btn-sm">
+                <a href="/api/download-dataset?type=10k" target="_blank" class="btn btn-secondary btn-sm">
                     <i class="fa-solid fa-file-csv"></i> 10k ML Training Data
                 </a>
             </div>
@@ -183,21 +183,7 @@
         }
     </style>
 
-    <!-- Mock API layer for static deployment -->
-    <script src="js/app.js"></script>
     <script>
-        // Download helper
-        function downloadDataset(type) {
-            fetch('/api/download-dataset?type=' + type).then(r => r.blob()).then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = type === '10k' ? 'rapid_kl_10k_synthetic.csv' : 'rapid_kl_bus_trips.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        }
-
         const chatBox = document.getElementById('full-chat-box');
         const chatInput = document.getElementById('full-chat-input');
         const chatSend = document.getElementById('full-chat-send');

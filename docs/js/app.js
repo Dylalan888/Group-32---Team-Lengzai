@@ -1,389 +1,4 @@
-// =============================================================================
-// BusGuard AI — Self-Contained Static Deployment JS
-// All API data is embedded directly so the frontend works without a Java backend.
-// =============================================================================
-
-// ── Embedded Dataset (from rapid_kl_bus_trips.csv) ──────────────────────────
-const RAW_TRIPS = [
-    { tripId:"TRIP-101", busId:"MYB-7701", routeId:"770", routeName:"Mid Valley to Subang Jaya", scheduledDeparture:"2026-10-10T08:00:00", observedDeparture:"2026-10-10T08:14:00", scheduledTravelMin:45, observedTravelMin:67, passengerLoad:88, driverId:"DRV-402", driverShiftHours:6.5, standbyBusAvailable:true, weatherCondition:"HEAVY_RAIN", trafficCongestionLevel:"CRITICAL", latitude:3.1176, longitude:101.6775, delayCause:"Federal Highway Congestion & Flash Flood" },
-    { tripId:"TRIP-102", busId:"MYB-1152", routeId:"B115", routeName:"KL Sentral to Complex Keramat", scheduledDeparture:"2026-10-10T08:15:00", observedDeparture:"2026-10-10T08:22:00", scheduledTravelMin:30, observedTravelMin:48, passengerLoad:75, driverId:"DRV-109", driverShiftHours:4.0, standbyBusAvailable:true, weatherCondition:"LIGHT_RAIN", trafficCongestionLevel:"HIGH", latitude:3.1340, longitude:101.6865, delayCause:"Jalan Tun Sambanthan Bus Lane Bottleneck" },
-    { tripId:"TRIP-103", busId:"MYB-7503", routeId:"750", routeName:"Central Market to Shah Alam Sek 14", scheduledDeparture:"2026-10-10T08:30:00", observedDeparture:"2026-10-10T08:32:00", scheduledTravelMin:50, observedTravelMin:53, passengerLoad:42, driverId:"DRV-881", driverShiftHours:3.2, standbyBusAvailable:true, weatherCondition:"CLEAR", trafficCongestionLevel:"LOW", latitude:3.1450, longitude:101.6960, delayCause:"Minor Traffic Signal Delay" },
-    { tripId:"TRIP-104", busId:"MYB-3004", routeId:"300", routeName:"Pandan Indah to Lebuh Ampang", scheduledDeparture:"2026-10-10T08:40:00", observedDeparture:"2026-10-10T08:58:00", scheduledTravelMin:35, observedTravelMin:59, passengerLoad:94, driverId:"DRV-332", driverShiftHours:8.5, standbyBusAvailable:false, weatherCondition:"MODERATE_RAIN", trafficCongestionLevel:"HIGH", latitude:3.1490, longitude:101.7120, delayCause:"Ampang Corridor Construction Gridlock" },
-    { tripId:"TRIP-105", busId:"MYB-7805", routeId:"780", routeName:"Pasar Seni to Kota Damansara", scheduledDeparture:"2026-10-10T09:00:00", observedDeparture:"2026-10-10T09:01:00", scheduledTravelMin:55, observedTravelMin:57, passengerLoad:30, driverId:"DRV-115", driverShiftHours:2.0, standbyBusAvailable:true, weatherCondition:"CLEAR", trafficCongestionLevel:"LOW", latitude:3.1420, longitude:101.6940, delayCause:"Normal Operating Conditions" },
-    { tripId:"TRIP-106", busId:"MYB-6006", routeId:"600", routeName:"Hab Puchong Utama to Pasar Seni", scheduledDeparture:"2026-10-10T09:10:00", observedDeparture:"2026-10-10T09:28:00", scheduledTravelMin:60, observedTravelMin:92, passengerLoad:98, driverId:"DRV-904", driverShiftHours:7.8, standbyBusAvailable:true, weatherCondition:"HEAVY_RAIN", trafficCongestionLevel:"CRITICAL", latitude:3.0330, longitude:101.6210, delayCause:"LDP Interchange Vehicle Breakdown" },
-    { tripId:"TRIP-107", busId:"MYB-2507", routeId:"250", routeName:"LRT Wangsa Maju to Terminal Lebuh Ampang", scheduledDeparture:"2026-10-10T09:20:00", observedDeparture:"2026-10-10T09:23:00", scheduledTravelMin:40, observedTravelMin:44, passengerLoad:50, driverId:"DRV-554", driverShiftHours:4.5, standbyBusAvailable:true, weatherCondition:"CLEAR", trafficCongestionLevel:"MEDIUM", latitude:3.2050, longitude:101.7320, delayCause:"Jalan Pahang Bus Stop Crowding" },
-    { tripId:"TRIP-108", busId:"MYB-4508", routeId:"450", routeName:"Hentian Kajang to Hub Lebuh Pudu", scheduledDeparture:"2026-10-10T09:30:00", observedDeparture:"2026-10-10T09:49:00", scheduledTravelMin:65, observedTravelMin:99, passengerLoad:91, driverId:"DRV-201", driverShiftHours:9.2, standbyBusAvailable:false, weatherCondition:"HEAVY_RAIN", trafficCongestionLevel:"HIGH", latitude:2.9820, longitude:101.7850, delayCause:"Cheras Highway Heavy Congestion" },
-    { tripId:"TRIP-109", busId:"MYB-1009", routeId:"100", routeName:"Hub Lebuh Pudu to Kuala Selangor", scheduledDeparture:"2026-10-10T09:45:00", observedDeparture:"2026-10-10T09:46:00", scheduledTravelMin:80, observedTravelMin:82, passengerLoad:35, driverId:"DRV-743", driverShiftHours:1.5, standbyBusAvailable:true, weatherCondition:"CLEAR", trafficCongestionLevel:"LOW", latitude:3.1460, longitude:101.6965, delayCause:"On Time Schedule" },
-    { tripId:"TRIP-110", busId:"MYB-5900", routeId:"590", routeName:"Hab Bandar Sungai Long to Hub Lebuh Pudu", scheduledDeparture:"2026-10-10T10:00:00", observedDeparture:"2026-10-10T10:18:00", scheduledTravelMin:50, observedTravelMin:78, passengerLoad:85, driverId:"DRV-612", driverShiftHours:5.2, standbyBusAvailable:true, weatherCondition:"MODERATE_RAIN", trafficCongestionLevel:"HIGH", latitude:3.0450, longitude:101.7920, delayCause:"Sungai Besi Toll Bottleneck" },
-    { tripId:"TRIP-111", busId:"MYB-8011", routeId:"T801", routeName:"LRT Sri Rampai to Section 10 Wangsa Maju", scheduledDeparture:"2026-10-10T10:15:00", observedDeparture:"2026-10-10T10:16:00", scheduledTravelMin:20, observedTravelMin:21, passengerLoad:22, driverId:"DRV-304", driverShiftHours:3.0, standbyBusAvailable:true, weatherCondition:"CLEAR", trafficCongestionLevel:"LOW", latitude:3.1970, longitude:101.7380, delayCause:"Feeder Bus Dynamic Flow" },
-    { tripId:"TRIP-112", busId:"MYB-7722", routeId:"772", routeName:"Subang Suria to Pasar Seni", scheduledDeparture:"2026-10-10T10:30:00", observedDeparture:"2026-10-10T10:52:00", scheduledTravelMin:55, observedTravelMin:91, passengerLoad:89, driverId:"DRV-118", driverShiftHours:6.8, standbyBusAvailable:true, weatherCondition:"HEAVY_RAIN", trafficCongestionLevel:"CRITICAL", latitude:3.1480, longitude:101.5450, delayCause:"Federal Highway Subang Ramp Blockage" }
-];
-
-// ── ML Prediction Engine (replicates Java DelayPredictorML) ─────────────────
-function predict(trip) {
-    const delayMin = trip.observedTravelMin - trip.scheduledTravelMin;
-    const weatherFactor = trip.weatherCondition === "HEAVY_RAIN" ? 1.35 : (trip.weatherCondition === "MODERATE_RAIN" ? 1.15 : 1.0);
-    const trafficFactor = trip.trafficCongestionLevel === "CRITICAL" ? 1.4 : (trip.trafficCongestionLevel === "HIGH" ? 1.25 : (trip.trafficCongestionLevel === "MEDIUM" ? 1.1 : 1.0));
-    const predictedDelay = Math.max(0, delayMin * weatherFactor * trafficFactor * 0.55 + (trip.passengerLoad > 80 ? 2.5 : 0));
-    const prob = Math.min(1.0, predictedDelay / 25.0 + (trip.trafficCongestionLevel === "CRITICAL" ? 0.3 : 0));
-    
-    let riskLevel = "LOW";
-    if (predictedDelay >= 15 || prob >= 0.8) riskLevel = "CRITICAL";
-    else if (predictedDelay >= 10 || prob >= 0.6) riskLevel = "HIGH";
-    else if (predictedDelay >= 5 || prob >= 0.35) riskLevel = "MEDIUM";
-
-    const priorityScore = (predictedDelay * 2.0) + (prob * 30) + (trip.passengerLoad * 0.3)
-        + (riskLevel === "CRITICAL" ? 20 : (riskLevel === "HIGH" ? 10 : (riskLevel === "MEDIUM" ? 5 : 0)));
-
-    const features = {};
-    features["Traffic Congestion"] = delayMin * trafficFactor * 0.3;
-    features["Weather Impact"] = delayMin * weatherFactor * 0.2;
-    features["Passenger Load Stress"] = trip.passengerLoad > 80 ? 2.5 : 0.5;
-    features["Scheduled Route Duration"] = trip.scheduledTravelMin * 0.02;
-
-    let explanationText = `Trip ${trip.tripId} on Route ${trip.routeId} predicted +${predictedDelay.toFixed(1)} min delay. `;
-    if (trip.trafficCongestionLevel === "CRITICAL" || trip.trafficCongestionLevel === "HIGH") {
-        explanationText += `Primary contributor: ${trip.trafficCongestionLevel} traffic congestion along ${trip.routeName}. `;
-    }
-    if (trip.weatherCondition !== "CLEAR") {
-        explanationText += `Weather factor: ${trip.weatherCondition.replace("_"," ").toLowerCase()} conditions increasing disruption risk. `;
-    }
-    if (trip.passengerLoad > 80) {
-        explanationText += `High passenger load (${trip.passengerLoad}%) amplifies service impact. `;
-    }
-
-    return {
-        tripId: trip.tripId,
-        predictedDelayMinutes: parseFloat(predictedDelay.toFixed(1)),
-        delayProbability: parseFloat(prob.toFixed(2)),
-        riskLevel,
-        priorityScore: parseFloat(priorityScore.toFixed(1)),
-        primaryFactor: trip.delayCause,
-        explanationText,
-        featureContributions: features
-    };
-}
-
-// ── Recovery Optimizer (replicates Java RecoveryOptimizer) ───────────────────
-function generateCandidates(trip, pred) {
-    const candidates = [];
-    // Route Optimization
-    const routeFeasible = pred.predictedDelayMinutes >= 5;
-    candidates.push({
-        candidateId: `${trip.tripId}-ROUTE`, strategyType: "ROUTE_OPTIMIZATION",
-        title: "Route Detour via Express Corridor",
-        actionDetails: `Divert Bus ${trip.busId} from main corridor to express bypass along ${trip.routeName}. Skip congested intermediate stops.`,
-        feasible: routeFeasible, feasibilityReason: routeFeasible ? "Route alternative available" : "Delay too low for route change",
-        estimatedPostActionDelayMin: parseFloat((pred.predictedDelayMinutes * 0.45).toFixed(1)),
-        expectedDelayReductionMin: parseFloat((pred.predictedDelayMinutes * 0.55).toFixed(1)),
-        estimatedCostImpact: 45.00, confidenceScore: 0.87,
-        potentialSideEffects: "Passengers at skipped stops may need to wait for next bus",
-        recommendationRationale: "High impact reduction with moderate operational cost. Recommended for HIGH/CRITICAL delays."
-    });
-    // Standby Bus
-    const standbyFeasible = trip.standbyBusAvailable && pred.predictedDelayMinutes >= 8;
-    candidates.push({
-        candidateId: `${trip.tripId}-STANDBY`, strategyType: "STANDBY_REASSIGNMENT",
-        title: "Standby Bus Depot Injection",
-        actionDetails: `Deploy standby bus from nearest depot to absorb downstream demand on Route ${trip.routeId}.`,
-        feasible: standbyFeasible, feasibilityReason: standbyFeasible ? "Standby bus available at depot" : (trip.standbyBusAvailable ? "Delay below standby threshold" : "No standby bus available"),
-        estimatedPostActionDelayMin: parseFloat((pred.predictedDelayMinutes * 0.3).toFixed(1)),
-        expectedDelayReductionMin: parseFloat((pred.predictedDelayMinutes * 0.7).toFixed(1)),
-        estimatedCostImpact: 120.00, confidenceScore: 0.92,
-        potentialSideEffects: "Increases fleet operating cost; depot standby reduced by 1 unit",
-        recommendationRationale: "Maximum delay reduction. Best for CRITICAL risk with available standby units."
-    });
-    // Adaptive Scheduling
-    candidates.push({
-        candidateId: `${trip.tripId}-ADAPTIVE`, strategyType: "ADAPTIVE_SCHEDULING",
-        title: "Headway Regulation (+5 min Buffer)",
-        actionDetails: `Adjust departure headway by +5 minutes to absorb propagation delay along Route ${trip.routeId}.`,
-        feasible: true, feasibilityReason: "Schedule adjustment always feasible",
-        estimatedPostActionDelayMin: parseFloat((pred.predictedDelayMinutes * 0.65).toFixed(1)),
-        expectedDelayReductionMin: parseFloat((pred.predictedDelayMinutes * 0.35).toFixed(1)),
-        estimatedCostImpact: 10.00, confidenceScore: 0.78,
-        potentialSideEffects: "Minor cascading schedule shift for trailing buses",
-        recommendationRationale: "Low cost and safe fallback option. Suitable for MEDIUM risk."
-    });
-    // No Action
-    candidates.push({
-        candidateId: `${trip.tripId}-NOACTION`, strategyType: "NO_ACTION",
-        title: "Retain Baseline Schedule (No Intervention)",
-        actionDetails: "Maintain current timetable. Monitor GPS telemetry for real-time updates.",
-        feasible: true, feasibilityReason: "Always available",
-        estimatedPostActionDelayMin: pred.predictedDelayMinutes,
-        expectedDelayReductionMin: 0, estimatedCostImpact: 0, confidenceScore: 1.0,
-        potentialSideEffects: "Delay propagates to downstream trips and passenger wait times increase",
-        recommendationRationale: "Zero cost but zero improvement. Only suitable for LOW risk trips."
-    });
-
-    // Select best feasible
-    let selected = candidates.filter(c => c.feasible).sort((a, b) => b.expectedDelayReductionMin - a.expectedDelayReductionMin)[0];
-    if (!selected) selected = candidates[candidates.length - 1]; // fallback to no-action
-
-    return { candidates, selected };
-}
-
-// ── Execution Policy (replicates Java ExecutionPolicyEngine) ─────────────────
-function evaluateDecision(pred, selected) {
-    if (selected.strategyType === "NO_ACTION") return "BLOCKED";
-    if (selected.confidenceScore >= 0.85 && pred.riskLevel !== "CRITICAL") return "AUTO_EXECUTE";
-    return "REQUIRES_APPROVAL";
-}
-
-// ── Impact Verifier (replicates Java ImpactVerifier) ─────────────────────────
-function verifyImpact(trip, pred, selected) {
-    const baselineDelay = pred.predictedDelayMinutes;
-    const postDelay = selected.estimatedPostActionDelayMin;
-    const reduction = parseFloat((baselineDelay - postDelay).toFixed(1));
-    const pctImprovement = baselineDelay > 0 ? parseFloat(((reduction / baselineDelay) * 100).toFixed(1)) : 0;
-    const cost = selected.estimatedCostImpact;
-    const status = reduction > 0 ? "IMPROVED" : "NO_CHANGE";
-    const summary = `Recovery strategy "${selected.title}" reduces predicted delay from +${baselineDelay}min to +${postDelay}min (${pctImprovement}% improvement). Cost: RM${cost.toFixed(2)}.`;
-    return { baselineDelayMin: baselineDelay, postActionDelayMin: postDelay, delayReductionMin: reduction, percentageImprovement: pctImprovement, costImpact: cost, outcomeStatus: status, verificationSummary: summary };
-}
-
-// ── State Manager ────────────────────────────────────────────────────────────
-const tripStates = {};
-const auditLogs = [];
-
-function getTripState(tripId) { return tripStates[tripId] || "PENDING"; }
-function setTripState(tripId, state) { tripStates[tripId] = state; }
-
-// ── Build Computed Data ─────────────────────────────────────────────────────
-function buildPredictions() {
-    const preds = RAW_TRIPS.map(t => predict(t));
-    preds.sort((a, b) => b.priorityScore - a.priorityScore);
-    preds.forEach((p, i) => { p.rank = i + 1; });
-    return preds;
-}
-
-function buildTripDetail(tripId) {
-    const trip = RAW_TRIPS.find(t => t.tripId === tripId) || RAW_TRIPS[0];
-    const pred = predict(trip);
-    const opt = generateCandidates(trip, pred);
-    const decision = evaluateDecision(pred, opt.selected);
-    if (!tripStates[trip.tripId]) {
-        if (decision === "AUTO_EXECUTE") tripStates[trip.tripId] = "AUTO_EXECUTED";
-        else if (decision === "REQUIRES_APPROVAL") tripStates[trip.tripId] = "PENDING_APPROVAL";
-        else tripStates[trip.tripId] = "PENDING";
-    }
-    const impact = verifyImpact(trip, pred, opt.selected);
-    return {
-        ...trip, ...pred,
-        candidates: opt.candidates,
-        selectedCandidate: opt.selected,
-        executionDecision: decision,
-        executionDecisionLabel: decision.replace(/_/g, " "),
-        executionDecisionColor: decision === "AUTO_EXECUTE" ? "#10B981" : (decision === "REQUIRES_APPROVAL" ? "#F59E0B" : "#EF4444"),
-        actionState: tripStates[trip.tripId],
-        impact
-    };
-}
-
-function buildSystemSummary() {
-    const preds = buildPredictions();
-    let criticalCount = 0, highCount = 0, totalDelay = 0;
-    preds.forEach(p => {
-        totalDelay += p.predictedDelayMinutes;
-        if (p.riskLevel === "CRITICAL") criticalCount++;
-        else if (p.riskLevel === "HIGH") highCount++;
-    });
-    return { totalTrips: preds.length, criticalTrips: criticalCount, highRiskTrips: highCount, totalBaselineDelayMin: parseFloat(totalDelay.toFixed(1)), modelMae: 2.15, modelPrecision: 0.92 };
-}
-
-function buildModelMetrics() {
-    return { mae: 2.15, rmse: 2.84, precision: 0.92, recall: 0.89, f1Score: 0.90, totalEvaluatedTrips: 12, tp: 6, fp: 1, tn: 4, fn: 1 };
-}
-
-function runSimulation() {
-    auditLogs.length = 0;
-    let autoCount = 0, reqApproval = 0, blocked = 0, totalReduction = 0;
-    RAW_TRIPS.forEach(trip => {
-        const pred = predict(trip);
-        const opt = generateCandidates(trip, pred);
-        const decision = evaluateDecision(pred, opt.selected);
-        const impact = verifyImpact(trip, pred, opt.selected);
-        let status = "PENDING";
-        if (decision === "AUTO_EXECUTE") { status = "AUTO_EXECUTED"; autoCount++; tripStates[trip.tripId] = "AUTO_EXECUTED"; }
-        else if (decision === "REQUIRES_APPROVAL") { status = "PENDING_APPROVAL"; reqApproval++; tripStates[trip.tripId] = "PENDING_APPROVAL"; }
-        else { status = "BLOCKED"; blocked++; tripStates[trip.tripId] = "PENDING"; }
-        totalReduction += impact.delayReductionMin;
-        auditLogs.push({
-            auditId: `AUD-${Date.now()}-${trip.tripId}`, timestamp: new Date().toISOString(),
-            tripId: trip.tripId, busId: trip.busId, routeId: trip.routeId,
-            predictedDelayMin: pred.predictedDelayMinutes, riskLevel: pred.riskLevel,
-            selectedStrategy: opt.selected.title, executionDecision: decision,
-            actionStatus: status, delayReductionMin: impact.delayReductionMin,
-            percentageImprovement: impact.percentageImprovement,
-            decisionRationale: opt.selected.recommendationRationale
-        });
-    });
-    return { status: "SUCCESS", totalTrips: RAW_TRIPS.length, autoExecuted: autoCount, requiresApproval: reqApproval, blocked, totalDelaySavedMin: parseFloat(totalReduction.toFixed(1)) };
-}
-
-// ── Mock fetch wrapper ──────────────────────────────────────────────────────
-const _originalFetch = window.fetch;
-window.fetch = function(url, options) {
-    const urlStr = typeof url === 'string' ? url : (url && url.url ? url.url : (url ? url.toString() : ''));
-    if (urlStr.includes('/api/') || urlStr.startsWith('api/')) {
-        return handleMockApi(urlStr, options);
-    }
-    return _originalFetch.call(this, url, options);
-};
-
-window.downloadDataset = function(type) {
-    fetch('/api/download-dataset?type=' + type).then(r => r.blob()).then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = type === '10k' ? 'rapid_kl_10k_synthetic.csv' : 'rapid_kl_bus_trips.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }).catch(err => {
-        console.error('Download error:', err);
-    });
-};
-
-function handleMockApi(url, options) {
-    const match = url.match(/\/api\/[^?#]*/);
-    let path = match ? match[0] : url.split('?')[0];
-    if (!path.startsWith('/api/') && path.startsWith('api/')) {
-        path = '/' + path;
-    }
-    const queryStr = url.includes('?') ? url.split('?')[1] : '';
-    const params = new URLSearchParams(queryStr);
-
-    let data;
-    if (path === '/api/system-summary') {
-        data = buildSystemSummary();
-    } else if (path === '/api/predictions') {
-        const preds = buildPredictions();
-        data = preds.map(p => {
-            const trip = RAW_TRIPS.find(t => t.tripId === p.tripId);
-            const opt = generateCandidates(trip, p);
-            const decision = evaluateDecision(p, opt.selected);
-            if (!tripStates[trip.tripId]) {
-                if (decision === "AUTO_EXECUTE") tripStates[trip.tripId] = "AUTO_EXECUTED";
-                else if (decision === "REQUIRES_APPROVAL") tripStates[trip.tripId] = "PENDING_APPROVAL";
-                else tripStates[trip.tripId] = "PENDING";
-            }
-            return { ...p, busId: trip.busId, routeId: trip.routeId, routeName: trip.routeName, actionState: tripStates[trip.tripId] };
-        });
-    } else if (path === '/api/trip-detail') {
-        const tripId = params.get('tripId') || 'TRIP-101';
-        data = buildTripDetail(tripId);
-    } else if (path === '/api/trips' || path === '/api/dataset') {
-        data = RAW_TRIPS;
-    } else if (path === '/api/model-metrics') {
-        data = buildModelMetrics();
-    } else if (path === '/api/audit-logs') {
-        data = auditLogs;
-    } else if (path === '/api/simulate-all') {
-        data = runSimulation();
-    } else if (path === '/api/action/approve') {
-        const tripId = params.get('tripId');
-        tripStates[tripId] = "APPROVED";
-        const trip = RAW_TRIPS.find(t => t.tripId === tripId);
-        const pred = predict(trip);
-        const opt = generateCandidates(trip, pred);
-        const impact = verifyImpact(trip, pred, opt.selected);
-        let steps = [];
-        if (opt.selected.strategyType === "ROUTE_OPTIMIZATION") {
-            steps = [`Step 1: Signal Driver of Bus ${trip.busId} to divert at Exit 211 onto Expressway Bypass Corridor.`, `Step 2: Notify passengers via bus onboard display that intermediate stops #4 and #5 will be bypassed to skip heavy congestion.`, `Step 3: Re-enter main route schedule at Station 8. Expected delay saving: ${impact.delayReductionMin} minutes.`];
-        } else if (opt.selected.strategyType === "STANDBY_REASSIGNMENT") {
-            steps = [`Step 1: Issue immediate depot dispatch command for Standby Bus MYB-DEPOT-99 at KL Sentral Hub.`, `Step 2: Proceed via express bus lane directly to Terminal Station 5.`, `Step 3: Inject Standby Bus into Trip ${trip.tripId} sequence, absorbing 80% of downstream delay.`];
-        } else if (opt.selected.strategyType === "ADAPTIVE_SCHEDULING") {
-            steps = [`Step 1: Transmit departure adjustment code +5 mins to driver console.`, `Step 2: Update terminal electronic passenger display boards with adjusted 5-minute headway buffer.`, `Step 3: Synchronize trailing bus interval to eliminate bus bunching along Route ${trip.routeId}.`];
-        } else {
-            steps = [`Step 1: Retain baseline timetable.`, `Step 2: Monitor vehicle telemetry for route updates.`, `Step 3: Re-evaluate when traffic congestion level changes.`];
-        }
-        data = { success: true, tripId: trip.tripId, busId: trip.busId, routeId: trip.routeId, status: "SUCCESSFUL_INTERVENTION_APPLIED", strategyTitle: opt.selected.title, baselineDelayMin: impact.baselineDelayMin, postActionDelayMin: impact.postActionDelayMin, delayReductionMin: impact.delayReductionMin, percentageImprovement: impact.percentageImprovement, costImpact: impact.costImpact, outcomeStatus: impact.outcomeStatus, verificationSummary: impact.verificationSummary, movementSteps: steps };
-    } else if (path === '/api/action/reject') {
-        const tripId = params.get('tripId');
-        tripStates[tripId] = "REJECTED";
-        data = { success: true, tripId, status: "REJECTED" };
-    } else if (path === '/api/chat') {
-        const body = options && options.body ? JSON.parse(options.body) : {};
-        const msg = body.message || "";
-        data = { reply: generateLocalChatReply(msg) };
-    } else if (path === '/api/download-dataset') {
-        const type = params.get('type');
-        let csv = "";
-        if (type === '10k') {
-            csv = "record_id,trip_id,route_id,scheduled_travel_min,observed_travel_min,passenger_load,weather,traffic_level,delay_min,is_critical\n";
-            for (let i = 1; i <= 500; i++) {
-                const baseTrip = RAW_TRIPS[(i - 1) % RAW_TRIPS.length];
-                const rain = (i % 3 === 0) ? "HEAVY_RAIN" : (i % 2 === 0 ? "MODERATE_RAIN" : "CLEAR");
-                const traffic = (i % 4 === 0) ? "CRITICAL" : (i % 3 === 0 ? "HIGH" : "MEDIUM");
-                const delay = Math.max(0, Math.round(((i * 7) % 35) + (rain === "HEAVY_RAIN" ? 12 : 2)));
-                csv += `REC-${10000 + i},${baseTrip.tripId},${baseTrip.routeId},${baseTrip.scheduledTravelMin},${baseTrip.scheduledTravelMin + delay},${baseTrip.passengerLoad},${rain},${traffic},${delay},${delay >= 15 ? 1 : 0}\n`;
-            }
-        } else {
-            csv = "trip_id,bus_id,route_id,route_name,scheduled_departure,observed_departure,scheduled_travel_min,observed_travel_min,passenger_load,driver_id,driver_shift_hours,standby_bus_available,weather_condition,traffic_congestion_level,latitude,longitude,delay_cause\n";
-            RAW_TRIPS.forEach(t => {
-                csv += `${t.tripId},${t.busId},${t.routeId},"${t.routeName}","${t.scheduledDeparture}","${t.observedDeparture}",${t.scheduledTravelMin},${t.observedTravelMin},${t.passengerLoad},${t.driverId},${t.driverShiftHours},${t.standbyBusAvailable},${t.weatherCondition},${t.trafficCongestionLevel},${t.latitude},${t.longitude},"${t.delayCause}"\n`;
-            });
-        }
-        return Promise.resolve(new Response(new Blob([csv], { type: 'text/csv' }), { status: 200 }));
-    } else {
-        data = { error: "Endpoint not found" };
-    }
-
-    return Promise.resolve(new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } }));
-}
-
-// ── Local Chat Reply Generator ──────────────────────────────────────────────
-function generateLocalChatReply(message) {
-    const msg = message.toLowerCase();
-    const preds = buildPredictions();
-    const criticalTrips = preds.filter(p => p.riskLevel === "CRITICAL");
-    const highTrips = preds.filter(p => p.riskLevel === "HIGH");
-
-    if (msg.includes("summary") || msg.includes("briefing") || msg.includes("overview")) {
-        return `📊 **Executive Delay Briefing — Rapid KL Bus Operations**\n\nCurrently monitoring **${preds.length} active trips** across the Klang Valley network.\n\n🔴 **${criticalTrips.length} CRITICAL risk trips** requiring immediate intervention:\n${criticalTrips.map(t => `• ${t.tripId} — +${t.predictedDelayMinutes}min delay (${t.primaryFactor})`).join('\n')}\n\n🟡 **${highTrips.length} HIGH risk trips** under active monitoring.\n\n📈 ML Model Accuracy: MAE 2.15 min | Precision 92% | F1 Score 0.90\n\nRecommendation: Prioritize CRITICAL trips for standby bus deployment or route detour to minimize passenger impact.`;
-    }
-
-    if (msg.includes("trip-101") || msg.includes("101")) {
-        const t = RAW_TRIPS[0];
-        const p = predict(t);
-        return `🔍 **TRIP-101 Detailed Analysis**\n\n🚌 Bus ${t.busId} on Route ${t.routeId} (${t.routeName})\n⏱ Predicted Delay: **+${p.predictedDelayMinutes} min** | Risk: **${p.riskLevel}**\n🌧 Weather: ${t.weatherCondition.replace("_"," ")} | Traffic: ${t.trafficCongestionLevel}\n👥 Passenger Load: ${t.passengerLoad}%\n\n📍 Root Cause: ${t.delayCause}\n\n💡 **Recommended Fix:** Deploy standby bus from nearest depot OR reroute via express corridor to bypass Federal Highway congestion. Expected delay reduction: ~${(p.predictedDelayMinutes * 0.55).toFixed(1)} minutes.`;
-    }
-
-    if (msg.includes("rain") || msg.includes("weather")) {
-        return `🌧 **Rain Delay Strategy Advisory**\n\nHeavy rain currently impacts ${RAW_TRIPS.filter(t=>t.weatherCondition==="HEAVY_RAIN").length} routes, increasing delay risk by ~35%.\n\n**Recommended Actions:**\n1. Activate standby buses at Puchong, Subang, and Kajang depots\n2. Enable +5 min headway buffer on all heavy-rain-affected routes\n3. Notify passenger info displays with updated ETAs\n4. Monitor Federal Highway and LDP corridor for flash flood warnings\n\nHistorically, heavy rain adds 8-15 minutes to routes through Federal Highway and Cheras corridor.`;
-    }
-
-    if (msg.includes("reroute") || msg.includes("detour") || msg.includes("770") || msg.includes("federal")) {
-        return `🛣 **Route 770 Federal Highway Congestion Analysis**\n\nCurrent Status: CRITICAL congestion + flash flooding reported\nAffected Trip: TRIP-101 (Bus MYB-7701)\n\n**Detour Strategy:**\n1. Divert at Exit 211 (Subang Jaya interchange)\n2. Take NPE Expressway bypass corridor\n3. Re-enter main route at Shah Alam Sek 14 junction\n\nEstimated delay reduction: ~55% | Cost: RM 45.00\nTradeoff: Passengers at stops #4 and #5 will need to wait for next scheduled bus.`;
-    }
-
-    if (msg.includes("standby") || msg.includes("depot") || msg.includes("dispatch")) {
-        const available = RAW_TRIPS.filter(t => t.standbyBusAvailable).length;
-        return `🚌 **Standby Bus Depot Status**\n\n✅ **${available} out of ${RAW_TRIPS.length}** routes have standby buses available in nearby depots.\n\n**Recommended Deployment Locations:**\n1. KL Sentral Hub — covers Route 770, B115, 780\n2. Puchong Depot — covers Route 600, 590\n3. Kajang Terminal — covers Route 450\n\n⚠️ Routes 300 and 450 have NO standby available. Consider cross-depot transfer if CRITICAL delays persist.`;
-    }
-
-    if (msg.includes("10k") || msg.includes("dataset") || msg.includes("training") || msg.includes("ml") || msg.includes("model")) {
-        return `🧠 **ML Training Dataset & Model Insights**\n\nThe BusGuard AI predictor was trained on **10,000 synthetic Rapid KL records** generated from real operational patterns.\n\n**Training Features:**\n• Scheduled vs observed departure/arrival times\n• Weather conditions (CLEAR, LIGHT_RAIN, MODERATE_RAIN, HEAVY_RAIN)\n• Traffic congestion levels (LOW, MEDIUM, HIGH, CRITICAL)\n• Passenger load percentage\n• Driver shift hours\n• GPS coordinates (Klang Valley region)\n\n**Model Performance:**\n• MAE: 2.15 minutes\n• RMSE: 2.84 minutes\n• Precision: 0.92 | Recall: 0.89 | F1: 0.90\n\nThe model uses a weighted feature contribution approach similar to SHAP to explain predictions.`;
-    }
-
-    // Default response
-    return `🤖 Thank you for your query! Based on current Rapid KL operations data:\n\n• **${preds.length} trips** actively monitored\n• **${criticalTrips.length} CRITICAL** and **${highTrips.length} HIGH** risk trips detected\n• Primary disruption corridors: Federal Highway, Cheras Highway, LDP Interchange\n\nI can help with:\n• Executive delay briefings\n• Individual trip analysis (e.g., "Why is TRIP-101 delayed?")\n• Rerouting strategies\n• Standby bus deployment recommendations\n• Weather impact analysis\n• ML model insights\n\nPlease ask a more specific question and I'll provide detailed operational intelligence!`;
-}
-
-
-// =============================================================================
-// Original app.js logic (unchanged from source, works with mock fetch above)
-// =============================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if on workbench page
-    if (!document.getElementById('kpi-total-trips')) {
-        return; // Skip workbench UI setup on other pages like assistant.html or dataset.html
-    }
-
     let currentTrips = [];
     let selectedTripId = null;
     let leafletMap = null;
@@ -404,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetTab === 'tab-map' && !leafletMap) {
                 initLeafletMap();
+            } else if (targetTab === 'tab-stations') {
+                loadStationDropdowns();
             } else if (targetTab === 'tab-metrics') {
                 loadModelMetrics();
             } else if (targetTab === 'tab-audit') {
@@ -833,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/audit-logs');
             const logs = await res.json();
             if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">No audit log records found. Run Auto-Simulation to generate logs.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">No audit log records found.</td></tr>';
                 return;
             }
 
@@ -925,4 +542,304 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aiSend) aiSend.click();
         }
     };
+
+    // --- Station Finder & Alternative Options Logic ---
+    let stationList = [];
+    let currentStationFilter = 'ALL';
+
+    async function loadStationDropdowns() {
+        try {
+            const res = await fetch('/api/stations');
+            stationList = await res.json();
+            
+            populateStationSelects(stationList);
+            renderStationDirectoryGrid(stationList);
+            setupStationSearchEvents();
+        } catch (e) {
+            console.error('Failed to load stations:', e);
+        }
+    }
+
+    function populateStationSelects(stations) {
+        const origSelect = document.getElementById('select-origin-station');
+        const destSelect = document.getElementById('select-dest-station');
+
+        if (origSelect && destSelect && stations.length > 0) {
+            const currentOrig = origSelect.value;
+            const currentDest = destSelect.value;
+
+            origSelect.innerHTML = '';
+            destSelect.innerHTML = '';
+
+            stations.forEach((s) => {
+                const opt1 = document.createElement('option');
+                opt1.value = s.stationId;
+                opt1.textContent = `${s.stationName} (${s.district})`;
+                origSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = s.stationId;
+                opt2.textContent = `${s.stationName} (${s.district})`;
+                destSelect.appendChild(opt2);
+            });
+
+            if (currentOrig && stations.some(s => s.stationId === currentOrig)) origSelect.value = currentOrig;
+            if (currentDest && stations.some(s => s.stationId === currentDest)) destSelect.value = currentDest;
+            else if (stations.length > 3) destSelect.selectedIndex = 3;
+        }
+    }
+
+    function renderStationDirectoryGrid(stations) {
+        const grid = document.getElementById('station-directory-grid');
+        if (!grid) return;
+
+        if (!stations || stations.length === 0) {
+            grid.innerHTML = '<div class="placeholder-state" style="grid-column: 1 / -1;"><p>No station hubs match search criteria.</p></div>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        stations.forEach(s => {
+            let routeBadges = s.routesServed.map(r => `<span class="badge badge-low" style="font-size:0.7rem;">Route ${r}</span>`).join(' ');
+            let transitBadges = s.transitConnections.map(t => `<span class="badge badge-auto" style="font-size:0.7rem; background:rgba(99,102,241,0.2); color:#A5B4FC;"><i class="fa-solid fa-train"></i> ${t}</span>`).join(' ');
+
+            const card = document.createElement('div');
+            card.className = 'glass';
+            card.style.cssText = 'padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color); background: rgba(30, 41, 59, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;';
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <h4 style="font-size:1.05rem; font-family:var(--font-heading); color:#fff; font-weight:700;">
+                            <i class="fa-solid fa-bus-simple icon-blue" style="margin-right:0.4rem;"></i> ${s.stationName}
+                        </h4>
+                        ${s.isDepotHub ? '<span class="badge badge-critical" style="font-size:0.68rem;"><i class="fa-solid fa-warehouse"></i> Depot Hub</span>' : ''}
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">
+                        <i class="fa-solid fa-location-dot"></i> ${s.district} • GPS (${s.latitude.toFixed(3)}, ${s.longitude.toFixed(3)})
+                    </div>
+                    <p style="font-size:0.8rem; color:var(--text-dim); margin-top:0.5rem; line-height:1.35;">
+                        ${s.description}
+                    </p>
+                    <div style="margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+                        ${routeBadges}
+                    </div>
+                    <div style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+                        ${transitBadges}
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.5rem; margin-top:0.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
+                    <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="setOriginStation('${s.stationId}')">
+                        <i class="fa-solid fa-location-dot icon-blue"></i> Set Origin
+                    </button>
+                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="setDestStation('${s.stationId}')">
+                        <i class="fa-solid fa-flag-checkered icon-red"></i> Set Destination
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function setupStationSearchEvents() {
+        const searchInput = document.getElementById('input-station-search');
+        const clearBtn = document.getElementById('btn-clear-station-search');
+        const filterChips = document.querySelectorAll('.chip-filter');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                filterStationDirectory();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                filterStationDirectory();
+            });
+        }
+
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                filterChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentStationFilter = chip.getAttribute('data-filter');
+                filterStationDirectory();
+            });
+        });
+    }
+
+    function filterStationDirectory() {
+        const searchInput = document.getElementById('input-station-search');
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        let filtered = stationList;
+
+        // 1. Text filter
+        if (query) {
+            filtered = filtered.filter(s =>
+                s.stationName.toLowerCase().includes(query) ||
+                s.district.toLowerCase().includes(query) ||
+                s.stationId.toLowerCase().includes(query) ||
+                s.routesServed.some(r => r.toLowerCase().includes(query)) ||
+                s.transitConnections.some(c => c.toLowerCase().includes(query))
+            );
+        }
+
+        // 2. Category Chip filter
+        if (currentStationFilter === 'DEPOT') {
+            filtered = filtered.filter(s => s.isDepotHub);
+        } else if (currentStationFilter === 'LRT') {
+            filtered = filtered.filter(s => s.transitConnections.some(c => c.includes('LRT')));
+        } else if (currentStationFilter === 'MRT') {
+            filtered = filtered.filter(s => s.transitConnections.some(c => c.includes('MRT')));
+        } else if (currentStationFilter === 'SELANGOR') {
+            filtered = filtered.filter(s => s.district.includes('Subang') || s.district.includes('Puchong') || s.district.includes('Kajang') || s.district.includes('Shah Alam') || s.district.includes('Ampang') || s.district.includes('Petaling'));
+        }
+
+        renderStationDirectoryGrid(filtered);
+    }
+
+    window.setOriginStation = function(stationId) {
+        const origSelect = document.getElementById('select-origin-station');
+        if (origSelect) {
+            origSelect.value = stationId;
+            searchStationRoute();
+        }
+    };
+
+    window.setDestStation = function(stationId) {
+        const destSelect = document.getElementById('select-dest-station');
+        if (destSelect) {
+            destSelect.value = stationId;
+            searchStationRoute();
+        }
+    };
+
+    const btnSearchStation = document.getElementById('btn-search-station');
+    if (btnSearchStation) {
+        btnSearchStation.addEventListener('click', searchStationRoute);
+    }
+
+    async function searchStationRoute() {
+        const origSelect = document.getElementById('select-origin-station');
+        const destSelect = document.getElementById('select-dest-station');
+        const resultsContainer = document.getElementById('station-results-container');
+
+        if (!origSelect || !destSelect || !resultsContainer) return;
+
+        const origin = origSelect.value;
+        const destination = destSelect.value;
+
+        resultsContainer.innerHTML = '<div class="placeholder-state"><i class="fa-solid fa-spinner fa-spin placeholder-icon"></i><p>Searching station routes & computing delay predictions...</p></div>';
+
+        try {
+            const res = await fetch(`/api/stations/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`);
+            const data = await res.json();
+            renderStationSearchResults(data);
+        } catch (e) {
+            console.error(e);
+            resultsContainer.innerHTML = '<div class="placeholder-state text-danger"><p>Error fetching station search results.</p></div>';
+        }
+    }
+
+    function renderStationSearchResults(data) {
+        const resultsContainer = document.getElementById('station-results-container');
+        if (!data || !data.originStation || !data.destinationStation) {
+            resultsContainer.innerHTML = '<div class="placeholder-state text-danger"><p>No station data found.</p></div>';
+            return;
+        }
+
+        const orig = data.originStation;
+        const dest = data.destinationStation;
+        const trip = data.matchedTrip || {};
+        const pred = data.prediction || {};
+        const alts = data.alternatives || [];
+        const distKm = data.estimatedDistanceKm || 5.0;
+        const baseFare = data.estimatedBaseFareMyr || 2.50;
+
+        let riskBadgeClass = 'badge-low';
+        if (pred.riskLevel === 'CRITICAL') riskBadgeClass = 'badge-critical';
+        else if (pred.riskLevel === 'HIGH') riskBadgeClass = 'badge-high';
+        else if (pred.riskLevel === 'MEDIUM') riskBadgeClass = 'badge-medium';
+
+        let alternativesHtml = '';
+        alts.forEach(alt => {
+            alternativesHtml += `
+                <div class="glass" style="padding:1.25rem; border-radius:12px; border:1px solid var(--border-color); background:rgba(30,41,59,0.7); display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+                            <h4 style="font-size:1.05rem; font-family:var(--font-heading); color:#fff;">
+                                <i class="fa-solid ${alt.iconClass}"></i> ${alt.title}
+                            </h4>
+                            <span class="badge badge-auto" style="font-size:0.7rem;">${alt.badgeText}</span>
+                        </div>
+                        <p style="font-size:0.83rem; color:var(--text-muted); line-height:1.4; margin-bottom:0.75rem;">
+                            ${alt.description}
+                        </p>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:0.6rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.8rem;">
+                        <span><strong>Est. Delay:</strong> +${alt.estimatedDelayMin} min</span>
+                        <span><strong>Fare:</strong> RM${(alt.estimatedFareMyr || baseFare).toFixed(2)}</span>
+                        <span class="text-success"><strong>Saved:</strong> -${alt.timeSavedMin} min</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        resultsContainer.innerHTML = `
+            <div class="glass" style="padding:1.25rem; border-radius:14px; border:1px solid var(--border-color); background:rgba(15,23,42,0.85); margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+                    <div>
+                        <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">JOURNEY CORRIDOR DIRECT BUS TRIP</span>
+                        <h3 style="font-size:1.3rem; font-family:var(--font-heading); color:#fff; margin-top:0.2rem;">
+                            ${orig.stationName} <i class="fa-solid fa-arrow-right icon-purple" style="font-size:0.9rem; margin:0 0.4rem;"></i> ${dest.stationName}
+                        </h3>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                            <i class="fa-solid fa-bus"></i> Route ${trip.routeId || 'N/A'}: ${trip.routeName || 'Direct Bus Service'} • Bus ID: ${trip.busId || 'MYB-KL'}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge ${riskBadgeClass}" style="font-size:0.95rem; padding:0.5rem 1rem;">${pred.riskLevel || 'NORMAL'} RISK</span>
+                    </div>
+                </div>
+
+                <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom:1rem;">
+                    <div class="pred-box">
+                        <label>Predicted Delay</label>
+                        <span style="color:var(--danger); font-size:1.3rem;">+${pred.predictedDelayMinutes || 0} min</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Disruption Prob</label>
+                        <span style="font-size:1.3rem;">${((pred.delayProbability || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Distance</label>
+                        <span style="font-size:1.3rem; color:var(--primary);">${distKm} km</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Est. Bus Fare</label>
+                        <span style="font-size:1.3rem; color:var(--success);">RM${baseFare.toFixed(2)}</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Bottleneck</label>
+                        <span style="color:var(--warning); font-size:0.9rem; font-weight:700;">${trip.delayCause || pred.primaryFactor || 'Traffic'}</span>
+                    </div>
+                </div>
+
+                <div style="font-size:0.83rem; color:var(--text-main); background:rgba(255,255,255,0.04); padding:0.75rem 1rem; border-radius:8px; border-left:3px solid var(--primary);">
+                    <i class="fa-solid fa-circle-info"></i> ${data.summaryRationale}
+                </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-family:var(--font-heading); color:#fff; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                    <i class="fa-solid fa-wand-magic-sparkles icon-purple"></i> Recommended Alternative Travel Options (${alts.length} Available)
+                </h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                    ${alternativesHtml}
+                </div>
+            </div>
+        `;
+    }
 });
