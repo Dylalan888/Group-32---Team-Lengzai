@@ -3,6 +3,9 @@
 > **Rapid KL Hackathon Prototype**  
 > AI-powered predictive analytics, delay intelligence, recovery strategy optimization, and confidence-based automated execution workbench built in Java 21.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FDylalan888%2FGroup-32---Team-Lengzai)
+**Live Vercel Link**: [https://group-32---team-lengzai.vercel.app](https://group-32---team-lengzai.vercel.app)
+
 ---
 
 ## 🚌 System Overview
