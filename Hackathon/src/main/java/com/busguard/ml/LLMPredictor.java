@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class LLMPredictor {
 
-    private static final String DEFAULT_GROQ_KEY = "YOUR_GROQ_API_KEY";
+    private static final String DEFAULT_GROQ_KEY = "";
     private String apiKey;
     private final RAGRetriever ragRetriever = new RAGRetriever();
 
@@ -24,7 +24,7 @@ public class LLMPredictor {
         if (envKey != null && !envKey.trim().isEmpty()) {
             this.apiKey = envKey.trim();
         } else {
-            this.apiKey = DEFAULT_GROQ_KEY;
+            this.apiKey = "";
         }
     }
 

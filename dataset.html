@@ -52,10 +52,10 @@
                 </p>
             </div>
             <div style="display: flex; gap: 1rem;">
-                <a href="#" onclick="downloadDataset('real'); return false;" download="rapid_kl_bus_trips.csv" class="btn btn-primary glow-btn">
+                <a href="/api/download-dataset?type=real" download="rapid_kl_bus_trips.csv" class="btn btn-primary glow-btn">
                     <i class="fa-solid fa-download"></i> Download Real CSV (12 Trips)
                 </a>
-                <a href="#" onclick="downloadDataset('10k'); return false;" download="rapid_kl_10k_synthetic.csv" class="btn btn-success">
+                <a href="/api/download-dataset?type=10k" download="rapid_kl_10k_synthetic.csv" class="btn btn-success">
                     <i class="fa-solid fa-file-arrow-down"></i> Download 10,000 ML Training CSV
                 </a>
             </div>
@@ -109,20 +109,7 @@
 
     </div>
 
-    <!-- Mock API layer for static deployment -->
-    <script src="js/app.js"></script>
     <script>
-        // Download helper
-        function downloadDataset(type) {
-            fetch('/api/download-dataset?type=' + type).then(r => r.blob()).then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = type === '10k' ? 'rapid_kl_10k_synthetic.csv' : 'rapid_kl_bus_trips.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        }
         document.addEventListener('DOMContentLoaded', () => {
             loadDatasetView();
 
@@ -174,7 +161,7 @@
                     <td><strong>${r.tripId}</strong></td>
                     <td><code>${r.busId}</code></td>
                     <td><strong style="color:var(--primary);">${r.routeId}</strong></td>
-                    <td style="font-size:0.78rem;">${(r.scheduledDeparture ? r.scheduledDeparture.substring(11,16) : '08:00')} vs ${(r.observedDeparture ? r.observedDeparture.substring(11,16) : '08:14')}</td>
+                    <td style="font-size:0.78rem;">08:00 vs 08:14</td>
                     <td><strong>+${r.predictedDelayMinutes} m</strong></td>
                     <td>${r.passengerLoad}%</td>
                     <td><span class="badge badge-low">${r.weatherCondition}</span></td>

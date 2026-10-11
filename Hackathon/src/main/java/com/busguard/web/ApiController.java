@@ -13,6 +13,8 @@ import com.busguard.risk.RiskEngine;
 import com.busguard.simulation.BusNetworkSimulator;
 import com.busguard.verification.ImpactVerifier;
 
+import com.busguard.station.*;
+
 import java.util.*;
 
 public class ApiController {
@@ -25,6 +27,8 @@ public class ApiController {
     private final ExecutionPolicyEngine policyEngine = new ExecutionPolicyEngine();
     private final SimulationStateManager stateManager = new SimulationStateManager();
     private final BusNetworkSimulator simulator = new BusNetworkSimulator();
+    private final StationKnowledgeBase stationKb = new StationKnowledgeBase();
+    private final StationSearchEngine stationSearchEngine = new StationSearchEngine(stationKb, predictor);
 
     public ApiController(String csvPath) {
         try {
@@ -52,6 +56,16 @@ public class ApiController {
             } else if (path.equals("/api/trip-detail")) {
                 String tripId = getQueryParam(query, "tripId");
                 return getTripDetailJson(tripId);
+            } else if (path.equals("/api/stations")) {
+                String q = getQueryParam(query, "query");
+                if (q != null && !q.trim().isEmpty()) {
+                    return toJsonStations(stationSearchEngine.searchStationsByKeyword(q));
+                }
+                return toJsonStations(stationKb.getAllStations());
+            } else if (path.equals("/api/stations/search")) {
+                String origin = getQueryParam(query, "origin");
+                String destination = getQueryParam(query, "destination");
+                return handleStationSearch(origin, destination);
             } else if (path.equals("/api/action/approve")) {
                 String tripId = getQueryParam(query, "tripId");
                 boolean ok = stateManager.approveAction(tripId);
@@ -408,6 +422,109 @@ public class ApiController {
 
         String aiReply = llmPredictor.chatWithAssistant(userMessage, context.toString());
         return String.format("{\"reply\":\"%s\"}", escapeJson(aiReply));
+    }
+
+    private String toJsonStations(List<BusStation> stations) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < stations.size(); i++) {
+            BusStation s = stations.get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{");
+            sb.append(String.format("\"stationId\":\"%s\",", s.getStationId()));
+            sb.append(String.format("\"stationName\":\"%s\",", escapeJson(s.getStationName())));
+            sb.append(String.format("\"district\":\"%s\",", escapeJson(s.getDistrict())));
+            sb.append(String.format("\"latitude\":%.4f,", s.getLatitude()));
+            sb.append(String.format("\"longitude\":%.4f,", s.getLongitude()));
+            sb.append(String.format("\"isDepotHub\":%b,", s.isDepotHub()));
+            sb.append(String.format("\"description\":\"%s\",", escapeJson(s.getDescription())));
+            
+            sb.append("\"routesServed\":[");
+            for (int j = 0; j < s.getRoutesServed().size(); j++) {
+                if (j > 0) sb.append(",");
+                sb.append(String.format("\"%s\"", escapeJson(s.getRoutesServed().get(j))));
+            }
+            sb.append("],");
+
+            sb.append("\"transitConnections\":[");
+            for (int j = 0; j < s.getTransitConnections().size(); j++) {
+                if (j > 0) sb.append(",");
+                sb.append(String.format("\"%s\"", escapeJson(s.getTransitConnections().get(j))));
+            }
+            sb.append("]");
+
+            sb.append("}");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String handleStationSearch(String origin, String destination) {
+        StationSearchEngine.StationSearchResult res = stationSearchEngine.searchRoute(origin, destination, busTrips);
+        StringBuilder sb = new StringBuilder("{");
+
+        BusStation orig = res.getOriginStation();
+        sb.append("\"originStation\":{");
+        sb.append(String.format("\"stationId\":\"%s\",", orig.getStationId()));
+        sb.append(String.format("\"stationName\":\"%s\",", escapeJson(orig.getStationName())));
+        sb.append(String.format("\"district\":\"%s\"", escapeJson(orig.getDistrict())));
+        sb.append("},");
+
+        BusStation dest = res.getDestinationStation();
+        sb.append("\"destinationStation\":{");
+        sb.append(String.format("\"stationId\":\"%s\",", dest.getStationId()));
+        sb.append(String.format("\"stationName\":\"%s\",", escapeJson(dest.getStationName())));
+        sb.append(String.format("\"district\":\"%s\"", escapeJson(dest.getDistrict())));
+        sb.append("},");
+
+        BusTrip trip = res.getMatchedTrip();
+        if (trip != null) {
+            sb.append("\"matchedTrip\":{");
+            sb.append(String.format("\"tripId\":\"%s\",", trip.getTripId()));
+            sb.append(String.format("\"busId\":\"%s\",", trip.getBusId()));
+            sb.append(String.format("\"routeId\":\"%s\",", trip.getRouteId()));
+            sb.append(String.format("\"routeName\":\"%s\",", escapeJson(trip.getRouteName())));
+            sb.append(String.format("\"scheduledTravelMin\":%d,", trip.getScheduledTravelMin()));
+            sb.append(String.format("\"observedTravelMin\":%d,", trip.getObservedTravelMin()));
+            sb.append(String.format("\"weatherCondition\":\"%s\",", trip.getWeatherCondition()));
+            sb.append(String.format("\"trafficCongestionLevel\":\"%s\",", trip.getTrafficCongestionLevel()));
+            sb.append(String.format("\"delayCause\":\"%s\"", escapeJson(trip.getDelayCause())));
+            sb.append("},");
+        }
+
+        PredictionResult pred = res.getPrediction();
+        if (pred != null) {
+            sb.append("\"prediction\":{");
+            sb.append(String.format("\"predictedDelayMinutes\":%.1f,", pred.getPredictedDelayMinutes()));
+            sb.append(String.format("\"delayProbability\":%.2f,", pred.getDelayProbability()));
+            sb.append(String.format("\"riskLevel\":\"%s\",", pred.getRiskLevel().name()));
+            sb.append(String.format("\"riskColor\":\"%s\",", pred.getRiskLevel().getColor()));
+            sb.append(String.format("\"primaryFactor\":\"%s\"", escapeJson(pred.getPrimaryFactor())));
+            sb.append("},");
+        }
+
+        sb.append(String.format("\"estimatedDistanceKm\":%.1f,", res.getEstimatedDistanceKm()));
+        sb.append(String.format("\"estimatedBaseFareMyr\":%.2f,", res.getEstimatedBaseFareMyr()));
+        sb.append(String.format("\"summaryRationale\":\"%s\",", escapeJson(res.getSummaryRationale())));
+
+        sb.append("\"alternatives\":[");
+        for (int i = 0; i < res.getAlternatives().size(); i++) {
+            var alt = res.getAlternatives().get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{");
+            sb.append(String.format("\"optionType\":\"%s\",", alt.getOptionType()));
+            sb.append(String.format("\"title\":\"%s\",", escapeJson(alt.getTitle())));
+            sb.append(String.format("\"description\":\"%s\",", escapeJson(alt.getDescription())));
+            sb.append(String.format("\"estimatedDelayMin\":%.1f,", alt.getEstimatedDelayMin()));
+            sb.append(String.format("\"timeSavedMin\":%.1f,", alt.getTimeSavedMin()));
+            sb.append(String.format("\"estimatedFareMyr\":%.2f,", alt.getEstimatedFareMyr()));
+            sb.append(String.format("\"iconClass\":\"%s\",", alt.getIconClass()));
+            sb.append(String.format("\"badgeText\":\"%s\"", escapeJson(alt.getBadgeText())));
+            sb.append("}");
+        }
+        sb.append("]");
+
+        sb.append("}");
+        return sb.toString();
     }
 
     private String escapeJson(String s) {

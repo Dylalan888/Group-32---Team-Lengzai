@@ -34,6 +34,7 @@ public class TestRunner {
         testExecutionPolicyEngine();
         testImpactVerifier();
         testRAGKnowledgeBase();
+        testStationKnowledgeBaseAndSearch();
         testEndToEndWorkflow();
 
         System.out.println("=========================================================");
@@ -271,6 +272,29 @@ public class TestRunner {
             pass("testEndToEndWorkflow");
         } catch (Exception e) {
             fail("testEndToEndWorkflow", e.getMessage());
+        }
+    }
+
+    // 10. Station Knowledge Base & Search Engine Tests
+    private static void testStationKnowledgeBaseAndSearch() {
+        try {
+            com.busguard.station.StationKnowledgeBase stationKb = new com.busguard.station.StationKnowledgeBase();
+            assertTrue(stationKb.getAllStations().size() >= 10, "Station KB should load at least 10 stations");
+
+            var sentral = stationKb.findById("STN-KL-SENTRAL");
+            assertTrue(sentral.isPresent(), "KL Sentral station should exist in station KB");
+
+            List<BusTrip> trips = DataLoader.loadDataset("data/rapid_kl_bus_trips.csv");
+            DelayPredictorML predictor = new DelayPredictorML();
+            com.busguard.station.StationSearchEngine engine = new com.busguard.station.StationSearchEngine(stationKb, predictor);
+
+            var searchResult = engine.searchRoute("KL Sentral", "Subang Jaya", trips);
+            assertTrue(searchResult.getOriginStation() != null, "Search origin station should be resolved");
+            assertTrue(searchResult.getDestinationStation() != null, "Search destination station should be resolved");
+            assertTrue(!searchResult.getAlternatives().isEmpty(), "Search engine should generate alternative travel options");
+            pass("testStationKnowledgeBaseAndSearch");
+        } catch (Exception e) {
+            fail("testStationKnowledgeBaseAndSearch", e.getMessage());
         }
     }
 }

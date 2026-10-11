@@ -106,6 +106,10 @@
                 <i class="fa-solid fa-map-location-dot"></i> Live Route Map
             </button>
 
+            <button class="tab-btn" data-tab="tab-stations">
+                <i class="fa-solid fa-map-pin"></i> Station Finder & Alternatives
+            </button>
+
             <button class="tab-btn" data-tab="tab-metrics">
                 <i class="fa-solid fa-brain"></i> ML Model Evaluation
             </button>
@@ -233,7 +237,87 @@
             </div>
         </section>
 
-        <!-- Tab 4: Audit Trail -->
+        <!-- Tab 4: Station Finder & Alternative Options -->
+        <section id="tab-stations" class="tab-content">
+            <div class="glass station-card">
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-map-pin"></i> Rapid KL Station Finder & Smart Alternative Journey Planner</h2>
+                    <p class="section-sub">Knowledge Base of bus stations, real-time station text search, delay predictions, and recommended rail/bus alternatives</p>
+                </div>
+
+                <!-- Station Text Search & Filter Panel -->
+                <div class="glass" style="padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 14px; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
+                            <i class="fa-solid fa-magnifying-glass icon-purple"></i> Instant Station Search & Filter
+                        </label>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <input type="text" id="input-station-search" placeholder="Type station name, district, route, or transit line (e.g. KL Sentral, Subang, Puchong, LRT)..." style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.95rem;" />
+                            <button id="btn-clear-station-search" class="btn btn-secondary" style="padding: 0 1.25rem;">Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Category Chips -->
+                    <div class="station-filter-chips" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="chip-filter active" data-filter="ALL">All Stations (13)</button>
+                        <button class="chip-filter" data-filter="DEPOT">Depot & Central Hubs</button>
+                        <button class="chip-filter" data-filter="LRT">LRT Connections</button>
+                        <button class="chip-filter" data-filter="MRT">MRT Connections</button>
+                        <button class="chip-filter" data-filter="SELANGOR">Selangor Suburbs</button>
+                    </div>
+                </div>
+
+                <!-- Journey Search Form Panel -->
+                <div class="station-search-panel glass" style="padding: 1.25rem; margin-bottom: 1.5rem; border-radius: 14px; border: 1px solid var(--border-color); background: rgba(15, 23, 42, 0.85);">
+                    <div style="font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-route icon-blue"></i> Select Origin & Destination for Delay Prediction & Alternative Options:
+                    </div>
+                    <div class="search-form-grid" style="display: grid; grid-template-columns: 1fr 1fr 220px; gap: 1rem; align-items: flex-end;">
+                        <div class="input-group">
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted);"><i class="fa-solid fa-location-dot icon-blue"></i> Origin Station</label>
+                            <select id="select-origin-station" class="select-input" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--bg-card); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem;">
+                                <option value="STN-KL-SENTRAL">KL Sentral Transport Hub</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted);"><i class="fa-solid fa-flag-checkered icon-red"></i> Destination Station</label>
+                            <select id="select-dest-station" class="select-input" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--bg-card); color: #fff; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem;">
+                                <option value="STN-SUBANG-JAYA">Subang Jaya Station Hub</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <button id="btn-search-station" class="btn btn-primary glow-btn" style="width: 100%; height: 42px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-magnifying-glass"></i> Search Destination & Predict Delay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Results Output Area -->
+                <div id="station-results-container" class="station-results-area" style="margin-bottom: 2rem;">
+                    <div class="placeholder-state">
+                        <i class="fa-solid fa-map-location-dot placeholder-icon"></i>
+                        <h3>Select Origin & Destination Station to Search</h3>
+                        <p>Click "Search Destination & Predict Delay" to view predicted travel delays and recommended rail/bus alternative options.</p>
+                    </div>
+                </div>
+
+                <!-- Station Directory Cards Grid -->
+                <div style="margin-top: 2rem;">
+                    <h3 style="font-size: 1.1rem; font-family: var(--font-heading); color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-building-columns icon-blue"></i> Rapid KL Bus Station Directory Knowledge Base
+                    </h3>
+                    <div id="station-directory-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+                        <div class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Loading station knowledge base...</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Tab 5: Audit Trail -->
         <section id="tab-audit" class="tab-content">
             <div class="glass audit-card">
                 <div class="section-header">

@@ -71,6 +71,20 @@ public class KnowledgeBase {
             "Interventions auto-execute when confidence score >= 82%, delay < 30 min, and cost < MYR 30.00. " +
             "Interventions require manual human operator approval if risk is CRITICAL, cost > MYR 30.00, or driver shift > 7.5h."
         ));
+
+        // Station KB 9: Central Transit Stations & Connections
+        documents.add(new KnowledgeDocument(
+            "KB-STN-009", "Station Directory", "KL Sentral & Pasar Seni Multi-Modal Bus Station Hubs",
+            "KL Sentral and Hub Pasar Seni serve as the main central bus interchanges. KL Sentral connects bus routes 770, B115, 750 with LRT Kelana Jaya Line, MRT Museum Negara, and KTM Komuter. " +
+            "If bus delay on Route 770 exceeds 15 mins, passengers are advised to take LRT Kelana Jaya Line directly to Subang Jaya."
+        ));
+
+        // Station KB 10: Klang Valley Suburban Hubs & Rail Bypass
+        documents.add(new KnowledgeDocument(
+            "KB-STN-010", "Station Directory", "Subang Jaya, Puchong, Wangsa Maju & Kajang Station Network",
+            "Subang Jaya Hub, Hab Puchong Utama (LDP), LRT Wangsa Maju, and Hentian Kajang connect suburban commuter corridors. " +
+            "When surface traffic delays affect bus trips to these hubs, rail bypass transfers (MRT Kajang Line or LRT Kelana Jaya/Puchong) provide 0-delay alternative options."
+        ));
     }
 
     public List<KnowledgeDocument> getDocuments() {

@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetTab === 'tab-map' && !leafletMap) {
                 initLeafletMap();
+            } else if (targetTab === 'tab-stations') {
+                loadStationDropdowns();
             } else if (targetTab === 'tab-metrics') {
                 loadModelMetrics();
             } else if (targetTab === 'tab-audit') {
@@ -540,4 +542,304 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aiSend) aiSend.click();
         }
     };
+
+    // --- Station Finder & Alternative Options Logic ---
+    let stationList = [];
+    let currentStationFilter = 'ALL';
+
+    async function loadStationDropdowns() {
+        try {
+            const res = await fetch('/api/stations');
+            stationList = await res.json();
+            
+            populateStationSelects(stationList);
+            renderStationDirectoryGrid(stationList);
+            setupStationSearchEvents();
+        } catch (e) {
+            console.error('Failed to load stations:', e);
+        }
+    }
+
+    function populateStationSelects(stations) {
+        const origSelect = document.getElementById('select-origin-station');
+        const destSelect = document.getElementById('select-dest-station');
+
+        if (origSelect && destSelect && stations.length > 0) {
+            const currentOrig = origSelect.value;
+            const currentDest = destSelect.value;
+
+            origSelect.innerHTML = '';
+            destSelect.innerHTML = '';
+
+            stations.forEach((s) => {
+                const opt1 = document.createElement('option');
+                opt1.value = s.stationId;
+                opt1.textContent = `${s.stationName} (${s.district})`;
+                origSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = s.stationId;
+                opt2.textContent = `${s.stationName} (${s.district})`;
+                destSelect.appendChild(opt2);
+            });
+
+            if (currentOrig && stations.some(s => s.stationId === currentOrig)) origSelect.value = currentOrig;
+            if (currentDest && stations.some(s => s.stationId === currentDest)) destSelect.value = currentDest;
+            else if (stations.length > 3) destSelect.selectedIndex = 3;
+        }
+    }
+
+    function renderStationDirectoryGrid(stations) {
+        const grid = document.getElementById('station-directory-grid');
+        if (!grid) return;
+
+        if (!stations || stations.length === 0) {
+            grid.innerHTML = '<div class="placeholder-state" style="grid-column: 1 / -1;"><p>No station hubs match search criteria.</p></div>';
+            return;
+        }
+
+        grid.innerHTML = '';
+        stations.forEach(s => {
+            let routeBadges = s.routesServed.map(r => `<span class="badge badge-low" style="font-size:0.7rem;">Route ${r}</span>`).join(' ');
+            let transitBadges = s.transitConnections.map(t => `<span class="badge badge-auto" style="font-size:0.7rem; background:rgba(99,102,241,0.2); color:#A5B4FC;"><i class="fa-solid fa-train"></i> ${t}</span>`).join(' ');
+
+            const card = document.createElement('div');
+            card.className = 'glass';
+            card.style.cssText = 'padding: 1.25rem; border-radius: 14px; border: 1px solid var(--border-color); background: rgba(30, 41, 59, 0.6); display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;';
+            card.innerHTML = `
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <h4 style="font-size:1.05rem; font-family:var(--font-heading); color:#fff; font-weight:700;">
+                            <i class="fa-solid fa-bus-simple icon-blue" style="margin-right:0.4rem;"></i> ${s.stationName}
+                        </h4>
+                        ${s.isDepotHub ? '<span class="badge badge-critical" style="font-size:0.68rem;"><i class="fa-solid fa-warehouse"></i> Depot Hub</span>' : ''}
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">
+                        <i class="fa-solid fa-location-dot"></i> ${s.district} • GPS (${s.latitude.toFixed(3)}, ${s.longitude.toFixed(3)})
+                    </div>
+                    <p style="font-size:0.8rem; color:var(--text-dim); margin-top:0.5rem; line-height:1.35;">
+                        ${s.description}
+                    </p>
+                    <div style="margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+                        ${routeBadges}
+                    </div>
+                    <div style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.3rem;">
+                        ${transitBadges}
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.5rem; margin-top:0.5rem; padding-top:0.75rem; border-top:1px solid rgba(255,255,255,0.06);">
+                    <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="setOriginStation('${s.stationId}')">
+                        <i class="fa-solid fa-location-dot icon-blue"></i> Set Origin
+                    </button>
+                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="setDestStation('${s.stationId}')">
+                        <i class="fa-solid fa-flag-checkered icon-red"></i> Set Destination
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function setupStationSearchEvents() {
+        const searchInput = document.getElementById('input-station-search');
+        const clearBtn = document.getElementById('btn-clear-station-search');
+        const filterChips = document.querySelectorAll('.chip-filter');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                filterStationDirectory();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                filterStationDirectory();
+            });
+        }
+
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                filterChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentStationFilter = chip.getAttribute('data-filter');
+                filterStationDirectory();
+            });
+        });
+    }
+
+    function filterStationDirectory() {
+        const searchInput = document.getElementById('input-station-search');
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+        let filtered = stationList;
+
+        // 1. Text filter
+        if (query) {
+            filtered = filtered.filter(s =>
+                s.stationName.toLowerCase().includes(query) ||
+                s.district.toLowerCase().includes(query) ||
+                s.stationId.toLowerCase().includes(query) ||
+                s.routesServed.some(r => r.toLowerCase().includes(query)) ||
+                s.transitConnections.some(c => c.toLowerCase().includes(query))
+            );
+        }
+
+        // 2. Category Chip filter
+        if (currentStationFilter === 'DEPOT') {
+            filtered = filtered.filter(s => s.isDepotHub);
+        } else if (currentStationFilter === 'LRT') {
+            filtered = filtered.filter(s => s.transitConnections.some(c => c.includes('LRT')));
+        } else if (currentStationFilter === 'MRT') {
+            filtered = filtered.filter(s => s.transitConnections.some(c => c.includes('MRT')));
+        } else if (currentStationFilter === 'SELANGOR') {
+            filtered = filtered.filter(s => s.district.includes('Subang') || s.district.includes('Puchong') || s.district.includes('Kajang') || s.district.includes('Shah Alam') || s.district.includes('Ampang') || s.district.includes('Petaling'));
+        }
+
+        renderStationDirectoryGrid(filtered);
+    }
+
+    window.setOriginStation = function(stationId) {
+        const origSelect = document.getElementById('select-origin-station');
+        if (origSelect) {
+            origSelect.value = stationId;
+            searchStationRoute();
+        }
+    };
+
+    window.setDestStation = function(stationId) {
+        const destSelect = document.getElementById('select-dest-station');
+        if (destSelect) {
+            destSelect.value = stationId;
+            searchStationRoute();
+        }
+    };
+
+    const btnSearchStation = document.getElementById('btn-search-station');
+    if (btnSearchStation) {
+        btnSearchStation.addEventListener('click', searchStationRoute);
+    }
+
+    async function searchStationRoute() {
+        const origSelect = document.getElementById('select-origin-station');
+        const destSelect = document.getElementById('select-dest-station');
+        const resultsContainer = document.getElementById('station-results-container');
+
+        if (!origSelect || !destSelect || !resultsContainer) return;
+
+        const origin = origSelect.value;
+        const destination = destSelect.value;
+
+        resultsContainer.innerHTML = '<div class="placeholder-state"><i class="fa-solid fa-spinner fa-spin placeholder-icon"></i><p>Searching station routes & computing delay predictions...</p></div>';
+
+        try {
+            const res = await fetch(`/api/stations/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`);
+            const data = await res.json();
+            renderStationSearchResults(data);
+        } catch (e) {
+            console.error(e);
+            resultsContainer.innerHTML = '<div class="placeholder-state text-danger"><p>Error fetching station search results.</p></div>';
+        }
+    }
+
+    function renderStationSearchResults(data) {
+        const resultsContainer = document.getElementById('station-results-container');
+        if (!data || !data.originStation || !data.destinationStation) {
+            resultsContainer.innerHTML = '<div class="placeholder-state text-danger"><p>No station data found.</p></div>';
+            return;
+        }
+
+        const orig = data.originStation;
+        const dest = data.destinationStation;
+        const trip = data.matchedTrip || {};
+        const pred = data.prediction || {};
+        const alts = data.alternatives || [];
+        const distKm = data.estimatedDistanceKm || 5.0;
+        const baseFare = data.estimatedBaseFareMyr || 2.50;
+
+        let riskBadgeClass = 'badge-low';
+        if (pred.riskLevel === 'CRITICAL') riskBadgeClass = 'badge-critical';
+        else if (pred.riskLevel === 'HIGH') riskBadgeClass = 'badge-high';
+        else if (pred.riskLevel === 'MEDIUM') riskBadgeClass = 'badge-medium';
+
+        let alternativesHtml = '';
+        alts.forEach(alt => {
+            alternativesHtml += `
+                <div class="glass" style="padding:1.25rem; border-radius:12px; border:1px solid var(--border-color); background:rgba(30,41,59,0.7); display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem;">
+                            <h4 style="font-size:1.05rem; font-family:var(--font-heading); color:#fff;">
+                                <i class="fa-solid ${alt.iconClass}"></i> ${alt.title}
+                            </h4>
+                            <span class="badge badge-auto" style="font-size:0.7rem;">${alt.badgeText}</span>
+                        </div>
+                        <p style="font-size:0.83rem; color:var(--text-muted); line-height:1.4; margin-bottom:0.75rem;">
+                            ${alt.description}
+                        </p>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:0.6rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.8rem;">
+                        <span><strong>Est. Delay:</strong> +${alt.estimatedDelayMin} min</span>
+                        <span><strong>Fare:</strong> RM${(alt.estimatedFareMyr || baseFare).toFixed(2)}</span>
+                        <span class="text-success"><strong>Saved:</strong> -${alt.timeSavedMin} min</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        resultsContainer.innerHTML = `
+            <div class="glass" style="padding:1.25rem; border-radius:14px; border:1px solid var(--border-color); background:rgba(15,23,42,0.85); margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+                    <div>
+                        <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">JOURNEY CORRIDOR DIRECT BUS TRIP</span>
+                        <h3 style="font-size:1.3rem; font-family:var(--font-heading); color:#fff; margin-top:0.2rem;">
+                            ${orig.stationName} <i class="fa-solid fa-arrow-right icon-purple" style="font-size:0.9rem; margin:0 0.4rem;"></i> ${dest.stationName}
+                        </h3>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">
+                            <i class="fa-solid fa-bus"></i> Route ${trip.routeId || 'N/A'}: ${trip.routeName || 'Direct Bus Service'} • Bus ID: ${trip.busId || 'MYB-KL'}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge ${riskBadgeClass}" style="font-size:0.95rem; padding:0.5rem 1rem;">${pred.riskLevel || 'NORMAL'} RISK</span>
+                    </div>
+                </div>
+
+                <div class="kpi-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom:1rem;">
+                    <div class="pred-box">
+                        <label>Predicted Delay</label>
+                        <span style="color:var(--danger); font-size:1.3rem;">+${pred.predictedDelayMinutes || 0} min</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Disruption Prob</label>
+                        <span style="font-size:1.3rem;">${((pred.delayProbability || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Distance</label>
+                        <span style="font-size:1.3rem; color:var(--primary);">${distKm} km</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Est. Bus Fare</label>
+                        <span style="font-size:1.3rem; color:var(--success);">RM${baseFare.toFixed(2)}</span>
+                    </div>
+                    <div class="pred-box">
+                        <label>Bottleneck</label>
+                        <span style="color:var(--warning); font-size:0.9rem; font-weight:700;">${trip.delayCause || pred.primaryFactor || 'Traffic'}</span>
+                    </div>
+                </div>
+
+                <div style="font-size:0.83rem; color:var(--text-main); background:rgba(255,255,255,0.04); padding:0.75rem 1rem; border-radius:8px; border-left:3px solid var(--primary);">
+                    <i class="fa-solid fa-circle-info"></i> ${data.summaryRationale}
+                </div>
+            </div>
+
+            <div style="margin-bottom:1rem;">
+                <h3 style="font-size:1.1rem; font-family:var(--font-heading); color:#fff; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                    <i class="fa-solid fa-wand-magic-sparkles icon-purple"></i> Recommended Alternative Travel Options (${alts.length} Available)
+                </h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                    ${alternativesHtml}
+                </div>
+            </div>
+        `;
+    }
 });
