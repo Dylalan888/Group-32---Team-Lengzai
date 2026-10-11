@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Page Not Found — BusGuard AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-brand">
+            <div class="logo-icon">
+                <i class="fa-solid fa-bus-simple"></i>
+            </div>
+            <div class="brand-text">
+                <h1>BusGuard <span class="badge-ai">AI</span></h1>
+                <p>Predictive Bus Delay & Automated Recovery System • Rapid KL</p>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <a href="index.html" class="btn btn-primary glow-btn">
+                <i class="fa-solid fa-gauge-high"></i> Recovery Workbench
+            </a>
+            <a href="assistant.html" class="btn btn-secondary">
+                <i class="fa-solid fa-robot"></i> AI Assistant
+            </a>
+            <a href="dataset.html" class="btn btn-secondary">
+                <i class="fa-solid fa-database"></i> Dataset & Training Data
+            </a>
+        </div>
+    </header>
+
+    <div class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center;">
+        <div class="glass" style="padding: 3rem; max-width: 560px; width: 100%;">
+            <div style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;">
+                <i class="fa-solid fa-compass-drafting"></i>
+            </div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.5rem; font-family: var(--font-heading);">Route Not Found</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                The requested transit sector does not exist or has been rerouted. Redirecting you to the BusGuard AI Recovery Workbench in <span id="countdown">3</span> seconds...
+            </p>
+            <a href="index.html" class="btn btn-primary glow-btn" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-arrow-left"></i> Return to Recovery Workbench
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let count = 3;
+        const countdownEl = document.getElementById('countdown');
+        const timer = setInterval(() => {
+            count--;
+            if (countdownEl) countdownEl.textContent = count;
+            if (count <= 0) {
+                clearInterval(timer);
+                window.location.href = 'index.html';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
